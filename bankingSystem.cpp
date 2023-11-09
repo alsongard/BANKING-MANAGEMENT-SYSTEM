@@ -66,7 +66,6 @@ class accounts : public customer//main inheritance - getDetails();
 		return accountNumber;
 	}
 };
-
 void accounts::openAccount()
 {   
     cout<<"Enter the Account Number\n";
@@ -89,8 +88,8 @@ void accounts::updateAccount()
 {
 	cout<<"enter the account number : \n";
 	cin>>accountNumber;
-	cout<<"Enter the amount you wish to deposit : \n";
-	cin>>balance;
+	cout<<"Enter the type of account : \n";
+	cin>>accountType;
 
 }
 void accounts::displayDetails()
@@ -195,7 +194,7 @@ void writeAccount()
 {
 	accounts accountObject;
 	fstream outFile;
-	outFile.open("accountDetails.dat", ios::app | ios::binary);
+	outFile.open("accountDetails.dat", ios::out | ios::app | ios::binary);
 	accountObject.getDetails();
 	accountObject.openAccount();
 	outFile.write(reinterpret_cast<char *>(&accountObject), sizeof(accounts));

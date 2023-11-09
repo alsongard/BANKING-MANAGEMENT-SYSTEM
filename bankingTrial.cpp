@@ -20,23 +20,17 @@ class customer
 
 void customer::getDetails()
 {
-    //ofstream myfile("customerDetails.txt", ios::app);
     cout<<"Enter customer Id"<<endl;
     cin>>customerId;
-    //myfile<<customerId;
     cout<<"Enter customer Name"<<endl;
-	cin.ignore();
+    cin.ignore();
     cin.getline(customerName, 100);
-    //myfile<<customerName;
     cout<<"Enter the customer age"<<endl;
     cin>>customerAge;
-    //myfile<<customerAge;
-	cout<<"enter phoneNumber"<<endl;
-	cin>>customerPhoneNumber;
-    //myfile<<customerPhoneNumber;
+    cout<<"enter phoneNumber"<<endl;
+    cin>>customerPhoneNumber;
     cout<<"Enter customer Address"<<endl;
     cin>>customerAddress;
-    //myfile<<customerAddress;
     cout<<"user details have been captured, kindly proceed to create account"<<endl;
 }
 void customer::updateDetails()
@@ -83,8 +77,8 @@ void accounts::updateAccount()
 {
 	cout<<"enter the account number : \n";
 	cin>>accountNumber;
-	cout<<"Enter the amount you wish to deposit : \n";
-	cin>>balance;
+	cout<<"Enter the type of account you wish to change : \n";
+	cin>>accountType;
 
 }
 void accounts::displayDetails()
@@ -111,13 +105,13 @@ void transaction::makeDeposit(int checkNumber)
 {
     transaction transactionObject;
     int amount;
-    // cout<<"Enter the account number of the user  : \n";
-    // cin>>checkNumber;
+    cout<<"Enter the account number of the user  : \n";
+    cin>>checkNumber;
     //check if account number exitst - read file and compare
     fstream inFile;
     inFile.open("accountDetails.dat", ios::in |  ios::out | ios::binary);
-    // fstream outFile;
-    // outFile.open("accountDetails.dat", ios::out | ios::binary);
+	fstream outFile;
+	outFile.open("accountDetails.dat", ios::out | ios::binary);
     //check existance of file
     if (!inFile)
     {
@@ -159,25 +153,18 @@ void transaction::makeWithdraw(int checkNumber)
         cout<<"Enter the amount you wish to withdraw \n";
         cin>>amount;
         //how to withdraw access balance and subtract from amount 
-        while(transactionObject.balance < 0)
+        if(amount < transactionObject.balance)
         {
             cout<<"Current account balance : "<<transactionObject.balance<<endl;
-            transactionObject.balance =  transactionObject.balance - amount;
-            cout<<"You have successfully withdrawn :"<<amount<<endl;
-            cout<<"Your balance is : "<<transactionObject.balance<<endl;
-            
+			transactionObject.balance =  transactionObject.balance - amount;
+			cout<<"You have successfully withdrawn :"<<amount<<endl;
+			cout<<"Your balance is : "<<transactionObject.balance<<endl;
         }
-        // if (transactionObject.balance < 0)
-        // {
-        //     cout<<"Insufficient amount for user to withdraw, kindly try a lower amount from "<<realNumber;
+		else
+		{
+			cout<<"Insufficient Funds, kindly try a lower amount\n"; 
+		} 
 
-        //     cin>>amount;
-        // } 
-        // else
-        // {
-        //     cout<<"You have successfull withdraw "<<amount<<" from your account\n";
-        //     cout<<"Current balance is "<<transactionObject.balance<<endl;
-        // }
     }
     
 }
@@ -215,7 +202,6 @@ int main()
 			case 1:
 				system("clear");
 				writeAccount();
-				
 				break;
 			case 2:
 				system("clear");
