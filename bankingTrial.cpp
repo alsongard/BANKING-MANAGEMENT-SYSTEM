@@ -52,9 +52,9 @@ class accounts : public customer//main inheritance - getDetails();
     //function belonging to the account class
     void openAccount();
 	// void closeAccount();
-	void updateAccount();  
+	void updateAccount(int checkNum);  
 	void displayDetails();
-	int returnAccNum() const
+	int returnAccountNumber() const
 	{
 		return accountNumber;
 	}
@@ -73,13 +73,27 @@ void accounts::openAccount()
 	cout<<"You acccount is successfully created\n";
 	cout<<endl<<endl;
 }
-void accounts::updateAccount()
+void accounts::updateAccount(int checkNum)
 {
-	cout<<"enter the account number : \n";
-	cin>>accountNumber;
-	cout<<"Enter the type of account you wish to change : \n";
-	cin>>accountType;
-
+	accounts accountObject;
+	//the account number is provided when updateAccount is called
+	//check if account exists
+	fstream inFile;
+	inFile.open("accountDetails.dat", ios::in | ios::out | ios::binary);
+	if (!inFile)
+	{
+		cout<<"No file was found\n";
+	}
+	//read data from file
+	inFile.read(reinterpret_cast<char *>(&accountObject), sizeof(accounts));
+	if (accountObject.returnAccountNumber() == checkNum)
+	{
+		cout<<"Account has been found \n";
+		cout<<"Enter the type of account you wish to change to \n Savings Account \n Family Account"<<endl;
+		cin>>accountType;
+		//how to change data from file
+	}
+	cout<<"Account Type has been successfully changed\n";
 }
 void accounts::displayDetails()
 {
@@ -119,7 +133,7 @@ void transaction::makeDeposit(int checkNumber)
     }
     inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts));
     {
-        if (transactionObject.returnAccNum() == checkNumber)
+        if (transactionObject.returnAccountNumber() == checkNumber)
         {
             cout<<"accountFound and proceed to withdraw \n";
             cout<<"Enter the amount you wish to deposit \n";
@@ -147,7 +161,7 @@ void transaction::makeWithdraw(int checkNumber)
         cout<<"Error!! the file does not exist\n";
     }
     inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts));
-    if (transactionObject.returnAccNum() == checkNumber)
+    if (transactionObject.returnAccountNumber() == checkNumber)
     {
         cout<<"Account found, proceed to withdraw\n";
         cout<<"Enter the amount you wish to withdraw \n";
@@ -175,21 +189,21 @@ int main()
 {
 
     transaction transactionObject;
+	accounts accountObject;
     int choice;
     //PREVENT READ CHARACTERS
-	while (choice != 8)
+	while (choice != 7)
 	{
 		cout<<"WELCOME TO CRYPTO BANKING SYSTEM"<<endl;
 		cout<<"TO GET STARTED, CHOOSE ONE OF THE OPTIONS BELOW"<<endl;
 		cout<<"=================MAIN MENU=================="<<endl;
 		cout<<"1: CREATE ACCOUNT"<<endl;
-		cout<<"2: SIGN ACCOUNT"<<endl;
-		cout<<"3: CLOSE ACCOUT"<<endl;
-		cout<<"4: UPDATE ACCOUNT"<<endl;
-		cout<<"5: WITHDRAW MONEY"<<endl;
-		cout<<"6: DEPOSIT MONEY"<<endl;
-		cout<<"7: DISPLAY ACCOUNTS"<<endl;
-		cout<<"8: Exit"<<endl;
+		cout<<"2: UPDATE ACCOUNT"<<endl;
+		cout<<"3: DISPLAY ACCOUNT"<<endl;
+		cout<<"4: WITHDRAW MONEY"<<endl;
+		cout<<"5: DEPOSIT MONEY"<<endl;
+		cout<<"6: CLOSE ACCOUNT"<<endl;
+		cout<<"7: Exit"<<endl;
 		cout<<endl;
 
 		cout<<"Choose the options from the above list\n";
@@ -201,46 +215,40 @@ int main()
 		{
 			case 1:
 				system("clear");
-				writeAccount();
+				writeAccount();//create account
 				break;
 			case 2:
 				system("clear");
-				cout<<"Enter your bamk account number\n";
+				cout<<"Enter account number\n";
 				cin>>accountNum;
-				//sign account func
+				accountObject.updateAccount(accountNum);//update account details
 				break;
 			case 3:
 				system("clear");
-				cout<<"Enter account number\n";
-				cin>>accountNum;
-				closeAccount(accountNum);
-				break;
-			case 4:
-				system("clear");
 				cout<<"Enter your account number\n";
 				cin>>accountNum;
-				//update money
+				displayAccountDetails(accountNum);//display user details
+				break;
+				
+			case 4:
+				system("clear");
+				cout<<"Enter accout number\n";
+				cin>>accountNum;
+				transactionObject.makeWithdraw(accountNum);//withdraw function
 				break;
 				
 			case 5:
 				system("clear");
-				cout<<"Enter accout number\n";
-				cin>>accountNum;
-				transactionObject.makeWithdraw(accountNum);
-				break;
-				
-			case 6:
-				system("clear");
 				cout<<"Enter account Number\n";
 				cin>>accountNum;
-				transactionObject.makeDeposit(accountNum);
+				transactionObject.makeDeposit(accountNum);//deposit function
 				break;
 			
-			case 7:
+			case 6:
 				system("clear");
 				cout<<"Enter account number\n";
 				cin>>accountNum;
-				displayAccountDetails(accountNum);
+				closeAccount(accountNum);//close account
 				break;
 		}
 	}
@@ -270,20 +278,23 @@ void closeAccount(int num)
 	{
 		cout<<"the file does not exist !!! Check another time\n";
 	}
-	outFile.open("Temp.dat", ios::binary);
-	inFile.seekg(0, ios::beg);
+	
+	//create a temp file for storing data without the user specified
+	outFile.open("temp.dat",ios::out | ios::binary);
+
+	//inFile.seekg(0, ios::beg);
 
 	while(inFile.read(reinterpret_cast<char *>(&accountsObject), sizeof(accounts)))
 	{
-		if(accountsObject.returnAccNum()!= num)
+		if(accountsObject.returnAccountNumber()!= num)
 		{
-			outFile.write(reinterpret_cast<char *> (&accountsObject), sizeof(accounts));
+			outFile.write((char *)(&accountsObject), sizeof(accounts));
 		}
 	}
 	inFile.close();
 	outFile.close();
-	remove("bankAccount.dat");
-	rename("Temp.dat", "bankAccount.dat");
+	remove("accountDetails.dat");
+	rename("temp.dat", "accountDetails.dat");
 	cout<<"Account has been succesfully removed\n";
 	cout<<endl;
 }
@@ -302,7 +313,7 @@ void displayAccountDetails(int num)
 	cout<<"BANK ACCOUNT DETAILS FOR : \n";	
 	while(inFile.read(reinterpret_cast<char *>(&accountsObject), sizeof(accounts)))
 	{
-		if (accountsObject.returnAccNum() == num)
+		if (accountsObject.returnAccountNumber() == num)
 		{
 			accountsObject.displayDetails();
 			condition = true;
