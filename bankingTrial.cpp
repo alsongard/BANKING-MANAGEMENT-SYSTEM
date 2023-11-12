@@ -161,46 +161,68 @@ class transaction : public accounts//inherit attributes and methods from account
 	//declare methods functions
 	void makeDeposit(int checkNumber);
 	void makeWithdraw(int checkNumber);
-	void getTransactionHistory();
+	void getTransaction(int checkNumber);
 };
-
+void transaction::getTransaction(int checkNumber)
+{	
+	transaction transactionObject;
+	bool condition = false;
+	fstream inFile;
+	inFile.open("accountDetails.dat", ios::in | ios::binary);//read data from original
+	fstream outFile;
+	outFile.open("transaction.dat", ios::out | ios::binary);//get details and compare specific changes
+	while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)))
+	{
+		if (transactionObject.returnAccountNumber() == checkNumber)
+		{
+			condition = true;
+			cout<<"Account has been found\n";
+			cout<<"ACCOUNT TRANSACTION HISTORY\n";
+		}
+	}
+}
 void transaction::makeDeposit(int checkNumber)
 {
     transaction transactionObject;
     int amount;
+	bool condition = false;
     //check if account number exitst - read file and compare
     fstream inFile;
-    inFile.open("accountDetails.dat", ios::in |  ios::out | ios::binary);
-	// fstream outFile;
-	// outFile.open("accountDetails.dat", ios::out | ios::binary);
+    inFile.open("accountDetails.dat", ios::in | ios::out | ios::binary);
     //check existance of file
     if (!inFile)
     {
         cout<<"Error !! No file was currently found, try again later\n";
     }
-    while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts)));
+    while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)));
     {
+		//multi-leve inheritance of returnAccountNumber()
         if (transactionObject.returnAccountNumber() == checkNumber)
         {
-            cout<<"accountFound and proceed to withdraw \n";
-			cout<<"Account balance of user : "<<transactionObject.balance<<endl;
+			bool condition = true;
+            cout<<"accountFound and proceed to deposit \n";
+			cout<<"Current balance : "<<transactionObject.balance<<endl;
             cout<<"Enter the amount you wish to deposit \n";
             cin>>amount;
             transactionObject.balance = transactionObject.balance + amount;
-            cout<<transactionObject.balance<<endl;
-			//changing the balance
+            cout<<"New user balance :"<<transactionObject.balance<<endl;
 			inFile.seekp(-static_cast<streamoff>(sizeof(transactionObject)), ios::cur);
-            // int pos = (-1)*static_cast <int>(sizeof(accounts));
-            inFile.write(reinterpret_cast<char *> (&transactionObject), sizeof(accounts));
-            
+			inFile.write(reinterpret_cast<char *>(&transactionObject), sizeof(transaction));
+			cout<<"Records updated successfully \n";
         }
  
     }
-	cout<<"Records updated successfully \n";
+	if (!condition)
+	{
+		cout<<"Account number could not be found.\n";
+	}
+	
+	
 }
 void transaction::makeWithdraw(int checkNumber)
 {
     transaction transactionObject;
+	bool condition = false;
     int amount, realNumber;
     //check whether account exist
     //read data from file for comparisons
@@ -211,27 +233,40 @@ void transaction::makeWithdraw(int checkNumber)
     {
         cout<<"Error!! the file does not exist\n";
     }
-    inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts));
-    if (transactionObject.returnAccountNumber() == checkNumber)
-    {
-        cout<<"Account found, proceed to withdraw\n";
-        cout<<"Enter the amount you wish to withdraw \n";
-        cin>>amount;
-        //how to withdraw access balance and subtract from amount 
-        if(amount < transactionObject.balance)
-        {
-            cout<<"Current account balance : "<<transactionObject.balance<<endl;
-			transactionObject.balance =  transactionObject.balance - amount;
-			cout<<"You have successfully withdrawn :"<<amount<<endl;
-			cout<<"Your balance is : "<<transactionObject.balance<<endl;
-        }
-		else
+	while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)))
+	{
+		if (transactionObject.returnAccountNumber() == checkNumber)
 		{
-			cout<<"Insufficient Funds, kindly try a lower amount\n"; 
-		} 
+			condition = true;
+			cout<<"Account has been found\n";
+			cout<<"Current user account balance is : "<<transactionObject.balance<<endl;
+			cout<<"Enter amount to withdraw  : \n";
+			cin>>amount;
+			
+			if (amount < transactionObject.balance)
+			{
+				cout<<"You can proceed to withdraw \n";
+				transactionObject.balance = transactionObject.balance - amount;
+				cout<<"You have successfully withdrawn : "<<amount<<endl;
+				cout<<"Current balance : "<<transactionObject.balance<<endl;
+				inFile.seekp(-static_cast<streamoff>(sizeof(transactionObject)), ios::cur);
+				inFile.write(reinterpret_cast<char *>(&transactionObject), sizeof(transaction));
+				// realNumber = transactionObject.balance;
+				// cout<<"Test for real Number : "<<realNumber<<endl;
 
-    }
-    
+			}
+			else
+			{
+				cout<<"You  do not have the required funds to proceed with these transaction\n";
+			}
+			
+		}
+
+	}
+	if(!condition)
+	{
+		cout<<"The account has not been found\n";
+	}    
 }
 void writeAccount();
 void closeAccount(int);
