@@ -15,7 +15,6 @@ class customer
 
     //methods getDetails(), updateDetails()
     void getDetails();
-    void updateDetails();
 };
 
 void customer::getDetails()
@@ -33,14 +32,15 @@ void customer::getDetails()
     cin>>customerAddress;
     cout<<"user details have been captured, kindly proceed to create account"<<endl;
 }
-void customer::updateDetails()
-{
-    cout<<"enter account number \n";
-    cin>>customerId;
-    cout<<"Enter customer name \n";
-    cin.getline(customerName, 100);
-    cout<<"Enter the type of account "<<" Saving account or Family Account"<<endl;
-}
+// void customer::updateDetails()//member function of customer 
+// //i will not use this for updating details of customer
+// {
+//     cout<<"enter account number \n";
+//     cin>>customerId;
+//     cout<<"Enter customer name \n";
+//     cin.getline(customerName, 100);
+//     cout<<"Enter the type of account "<<" Saving account or Family Account"<<endl;
+//}
 
 class accounts : public customer//main inheritance - getDetails();
 {
@@ -48,10 +48,9 @@ class accounts : public customer//main inheritance - getDetails();
 	int accountNumber;
 	int balance;
     char accountType[20];
-
     //function belonging to the account class
     void openAccount();
-	// void closeAccount();
+	void closeAccount(int num);
 	void updateAccount(int checkNum);  
 	void displayDetails();
 	int returnAccountNumber() const
@@ -67,8 +66,8 @@ void accounts::openAccount()
     //myfile<<accountNumber;
     cout<<"Enter the amount you wish to deposit\n";
     cin>>balance;
-	cin.ignore();
     cout<<"Enter the type of account for the user \n"<<"Saving account or Family Account"<<endl;
+	cin.ignore();
     cin.getline(accountType, 20);
 	cout<<"You acccount is successfully created\n";
 	cout<<endl<<endl;
@@ -82,18 +81,40 @@ void accounts::updateAccount(int checkNum)
 	inFile.open("accountDetails.dat", ios::in | ios::out | ios::binary);
 	if (!inFile)
 	{
-		cout<<"No file was found\n";
+		cout<<"An error occured while accessing the file\n";
 	}
 	//read data from file
-	inFile.read(reinterpret_cast<char *>(&accountObject), sizeof(accounts));
-	if (accountObject.returnAccountNumber() == checkNum)
+	while(inFile.read(reinterpret_cast<char *>(&accountObject), sizeof(accounts)))
 	{
-		cout<<"Account has been found \n";
+		if (accountObject.returnAccountNumber() == checkNum)
+	{
+		cout<<"Account user has been found \n";
+		cout<<"the user details for the account number are : \n";
+		cout<<"Account Number : "<<accountObject.accountNumber<<endl;
+		cout<<"Customer Id : "<<accountObject.customerId<<endl;
+		cout<<"Account User Name : "<<accountObject.customerName<<endl;
+		cout<<"Account customerAddress : "<<accountObject.customerAddress<<endl;
+		cout<<"Account user phone number "<<accountObject.customerPhoneNumber<<endl;
+		//PROCEED TO CHANGE USER ACCOUNT DETAILS
+		cout<<"PROCEED TO CHANGE USER ACCOUNT DETAILS \n";
+		cout<<"Enter the new user name \n";
+		cin.ignore();
+		cin.getline(accountObject.customerName, 100);
+		cout<<"Enter new user home address \n";
+		cin>>accountObject.customerAddress;
+		cout<<"Enter new user phone number \n";
+		cin>>accountObject.customerPhoneNumber;
 		cout<<"Enter the type of account you wish to change to \n Savings Account \n Family Account"<<endl;
-		cin>>accountType;
+		cin>>accountObject.accountType;
+
 		//how to change data from file
+		inFile.seekp(-static_cast<streamoff>(sizeof(accountObject)), ios::cur);
+		inFile.write(reinterpret_cast<char *>(&accountObject), sizeof(accountObject));
 	}
-	cout<<"Account Type has been successfully changed\n";
+	}
+	
+		cout<<"User Account Details have been changed successfully\n";
+
 }
 void accounts::displayDetails()
 {
@@ -104,14 +125,42 @@ void accounts::displayDetails()
 	cout<<endl;
 	cout<<endl;
 }
+void accounts::closeAccount(int num)
+{
+	// 	int accountNumber; int balance char accountType[20];
+	accounts accountsObject;
+	
+	fstream inFile;
+	fstream outFile;
+	inFile.open("accountDetails.dat", ios::in | ios::binary);
+	if(!inFile)
+	{
+		cout<<"the file does not exist !!! Check another time\n";
+	}
+	
+	//create a temp file for storing data without the user specified
+	outFile.open("temp.dat",ios::out | ios::binary);
 
+	while(inFile.read(reinterpret_cast<char *>(&accountsObject), sizeof(accounts)))
+	{
+		if(accountsObject.returnAccountNumber()!= num)
+		{
+			outFile.write((char *)(&accountsObject), sizeof(accounts));
+		}
+	}
+	inFile.close();
+	outFile.close();
+	remove("accountDetails.dat");
+	rename("temp.dat", "accountDetails.dat");
+	cout<<"Account has been succesfully removed\n";
+	cout<<endl;
+}
 class transaction : public accounts//inherit attributes and methods from accounts class
 {	
     public:
 	//declare methods functions
 	void makeDeposit(int checkNumber);
 	void makeWithdraw(int checkNumber);
-	void updateAccount();
 	void getTransactionHistory();
 };
 
@@ -119,33 +168,35 @@ void transaction::makeDeposit(int checkNumber)
 {
     transaction transactionObject;
     int amount;
-    cout<<"Enter the account number of the user  : \n";
-    cin>>checkNumber;
     //check if account number exitst - read file and compare
     fstream inFile;
     inFile.open("accountDetails.dat", ios::in |  ios::out | ios::binary);
-	fstream outFile;
-	outFile.open("accountDetails.dat", ios::out | ios::binary);
+	// fstream outFile;
+	// outFile.open("accountDetails.dat", ios::out | ios::binary);
     //check existance of file
     if (!inFile)
     {
         cout<<"Error !! No file was currently found, try again later\n";
     }
-    inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts));
+    while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(accounts)));
     {
         if (transactionObject.returnAccountNumber() == checkNumber)
         {
             cout<<"accountFound and proceed to withdraw \n";
+			cout<<"Account balance of user : "<<transactionObject.balance<<endl;
             cout<<"Enter the amount you wish to deposit \n";
             cin>>amount;
             transactionObject.balance = transactionObject.balance + amount;
             cout<<transactionObject.balance<<endl;
-            int pos = (-1)*static_cast <int>(sizeof(accounts));
+			//changing the balance
+			inFile.seekp(-static_cast<streamoff>(sizeof(transactionObject)), ios::cur);
+            // int pos = (-1)*static_cast <int>(sizeof(accounts));
             inFile.write(reinterpret_cast<char *> (&transactionObject), sizeof(accounts));
-            cout<<"Records updated successfully \n";
+            
         }
  
     }
+	cout<<"Records updated successfully \n";
 }
 void transaction::makeWithdraw(int checkNumber)
 {
@@ -248,7 +299,7 @@ int main()
 				system("clear");
 				cout<<"Enter account number\n";
 				cin>>accountNum;
-				closeAccount(accountNum);//close account
+				accountObject.closeAccount(accountNum);//close account
 				break;
 		}
 	}
@@ -265,38 +316,6 @@ void writeAccount()
 	accountObject.openAccount();
 	outFile.write(reinterpret_cast<char *>(&accountObject), sizeof(accounts));
 	outFile.close();
-}
-void closeAccount(int num)
-{
-	// 	int accountNumber; int balance char accountType[20];
-	accounts accountsObject;
-	
-	fstream inFile;
-	fstream outFile;
-	inFile.open("accountDetails.dat", ios::in | ios::binary);
-	if(!inFile)
-	{
-		cout<<"the file does not exist !!! Check another time\n";
-	}
-	
-	//create a temp file for storing data without the user specified
-	outFile.open("temp.dat",ios::out | ios::binary);
-
-	//inFile.seekg(0, ios::beg);
-
-	while(inFile.read(reinterpret_cast<char *>(&accountsObject), sizeof(accounts)))
-	{
-		if(accountsObject.returnAccountNumber()!= num)
-		{
-			outFile.write((char *)(&accountsObject), sizeof(accounts));
-		}
-	}
-	inFile.close();
-	outFile.close();
-	remove("accountDetails.dat");
-	rename("temp.dat", "accountDetails.dat");
-	cout<<"Account has been succesfully removed\n";
-	cout<<endl;
 }
 void displayAccountDetails(int num)
 {
