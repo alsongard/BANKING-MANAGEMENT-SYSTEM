@@ -167,19 +167,41 @@ void transaction::getTransaction(int checkNumber)
 {	
 	transaction transactionObject;
 	bool condition = false;
+	int prevBalance, currBalance;
+	int result;
 	fstream inFile;
 	inFile.open("accountDetails.dat", ios::in | ios::binary);//read data from original
 	fstream outFile;
-	outFile.open("transaction.dat", ios::out | ios::binary);//get details and compare specific changes
-	while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)))
+	outFile.open("transaction.dat",ios::app| ios::binary);//get details and compare specific changes
+	while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)))//copy first
+	{
+		outFile.write((char *)(&transactionObject), sizeof(transaction));
+		if (transactionObject.returnAccountNumber() == checkNumber)
+		{
+			currBalance = transactionObject.balance;
+		}
+	}
+	fstream readOut;
+	readOut.open("transaction.dat", ios::in | ios::binary);
+	while(readOut.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)))
 	{
 		if (transactionObject.returnAccountNumber() == checkNumber)
 		{
-			condition = true;
-			cout<<"Account has been found\n";
-			cout<<"ACCOUNT TRANSACTION HISTORY\n";
+			prevBalance = transactionObject.balance;
 		}
 	}
+	if (prevBalance > currBalance)
+	{
+		result = prevBalance - currBalance;
+		cout<<"The user withdrew : "<<result<<endl;
+	}
+	else if (prevBalance < currBalance)
+	{
+		result = currBalance - prevBalance;
+		cout<<"The user deposited : "<<result<<endl;
+	} 
+	outFile.close();
+	inFile.close();
 }
 void transaction::makeDeposit(int checkNumber)
 {
@@ -196,27 +218,27 @@ void transaction::makeDeposit(int checkNumber)
     }
     while(inFile.read(reinterpret_cast<char *>(&transactionObject), sizeof(transaction)));
     {
-		//multi-leve inheritance of returnAccountNumber()
+		//multi-leve inheritance of user customerName//try
         if (transactionObject.returnAccountNumber() == checkNumber)
         {
-			bool condition = true;
+			condition = true;
             cout<<"accountFound and proceed to deposit \n";
-			cout<<"Current balance : "<<transactionObject.balance<<endl;
+			cout<<"The user account Name is : "<<transactionObject.customerName;
+			cout<<"Current user account balance : "<<transactionObject.balance<<endl;
+			
             cout<<"Enter the amount you wish to deposit \n";
             cin>>amount;
             transactionObject.balance = transactionObject.balance + amount;
             cout<<"New user balance :"<<transactionObject.balance<<endl;
 			inFile.seekp(-static_cast<streamoff>(sizeof(transactionObject)), ios::cur);
 			inFile.write(reinterpret_cast<char *>(&transactionObject), sizeof(transaction));
-			cout<<"Records updated successfully \n";
         }
  
-    }
+    }	
 	if (!condition)
 	{
-		cout<<"Account number could not be found.\n";
+		cout<<"No user account with that number\n";
 	}
-	
 	
 }
 void transaction::makeWithdraw(int checkNumber)
@@ -239,6 +261,7 @@ void transaction::makeWithdraw(int checkNumber)
 		{
 			condition = true;
 			cout<<"Account has been found\n";
+			cout<<"The user account Name is : "<<transactionObject.customerName<<endl;
 			cout<<"Current user account balance is : "<<transactionObject.balance<<endl;
 			cout<<"Enter amount to withdraw  : \n";
 			cin>>amount;
@@ -278,7 +301,7 @@ int main()
 	accounts accountObject;
     int choice;
     //PREVENT READ CHARACTERS
-	while (choice != 7)
+	while (choice != 8)
 	{
 		cout<<"WELCOME TO CRYPTO BANKING SYSTEM"<<endl;
 		cout<<"TO GET STARTED, CHOOSE ONE OF THE OPTIONS BELOW"<<endl;
@@ -289,7 +312,8 @@ int main()
 		cout<<"4: WITHDRAW MONEY"<<endl;
 		cout<<"5: DEPOSIT MONEY"<<endl;
 		cout<<"6: CLOSE ACCOUNT"<<endl;
-		cout<<"7: Exit"<<endl;
+		cout<<"7: GET TRANSACTION"<<endl;
+		cout<<"8: Exit"<<endl;
 		cout<<endl;
 
 		cout<<"Choose the options from the above list\n";
@@ -336,6 +360,11 @@ int main()
 				cin>>accountNum;
 				accountObject.closeAccount(accountNum);//close account
 				break;
+			case 7:
+				system("clear");
+				cout<<"Enter the account Number \n";
+				cin>>accountNum;
+				transactionObject.getTransaction(accountNum);
 		}
 	}
 	cout<<"Thank you for using Crypto Bank. We hope to see you soon\n";
