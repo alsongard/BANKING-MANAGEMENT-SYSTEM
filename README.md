@@ -9,9 +9,9 @@
 >>  The project consist of two branches, namely main and trial. The end product is stored in the main repository. The system will be developed using C++ Programming Language. 
 ******
 # TABLE OF CONTENTS
->> * [Installation]
->> * [Usage]
->> * [Features]
+>> * [Installation](#1-installation)
+>> * [Usage](#2-usage)
+>> * [Features](#3-features)
 >> * [Contributing]
 >> * [[License]]
 
